@@ -1,0 +1,40 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade buildozer cython
+        sudo apt-get update
+        sudo apt-get install -y build-essential libsqlite3-dev sqlite3 bzip2 libbz2-dev zlib1g-dev libssl-dev openssl libgdbm-dev libgdbm-compat-dev libreadline-dev libffi-dev libgl1-mesa-dev libgles2-mesa-dev zip unzip openjdk-17-jdk
+
+    - name: Generate buildozer.spec
+      run: |
+        buildozer init
+        sed -i 's/title = My Application/title = SL GEOMETRY DASH/' buildozer.spec
+        sed -i 's/package.name = myapp/package.name = slgeometrydash/' buildozer.spec
+        sed -i 's/requirements = python3,kivy/requirements = python3,pygame/' buildozer.spec
+        sed -i 's/orientation = portrait/orientation = landscape/' buildozer.spec
+
+    - name: Build APK
+      run: buildozer -v android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: SL_Geometry_Dash_APK
+        path: bin/*.apk
